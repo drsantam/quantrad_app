@@ -11,3 +11,9 @@ QUANTRAD is an open source Django application designed to allow users to view an
 [ ] Dose volume information in a queriable interface for a given set of treatment plans  
 [ ] Registration information for verification imaging  
 [ ] Quality Assurance results for a given treatment plan  
+
+
+# Notes for Docker image
+
+Pyradiomics will require build-essential and python3-dev
+
