@@ -3,48 +3,12 @@ from django.db import models
 from django.core.exceptions import ValidationError
 from lookup.models import *
 
-# Create your models here.
+# Enums
 
 class GenderChoices(models.TextChoices):
     MALE = 'M', 'Male'
     FEMALE = 'F', 'Female'
     OTHER = 'O', 'Other'
-
-class Patient(models.Model):
-    '''
-    Model to store information about Patient.
-    '''
-    patient_uid = models.CharField(unique=True,max_length=255,verbose_name = "Patient Hospital Unique ID", help_text="Enter the patient's Hospital Unique ID")
-    name = models.CharField(max_length=255,verbose_name = "Patient Name", help_text="Enter the patient's name")
-    date_of_birth = models.DateField(verbose_name = "Date of Birth", help_text="Enter the patient's date of birth")
-    gender = models.CharField(max_length=10,choices=GenderChoices.choices,verbose_name = "Gender", help_text="Enter the patient's gender")
-    date_of_registration = models.DateField(auto_now_add=True,verbose_name = "Date of Registration", help_text="Enter the patient's date of registration")
-    age_at_registration = models.GeneratedField(
-        expression = models.F('date_of_registration')-models.F('date_of_birth'),
-        output_field = models.DurationField(),
-        db_persist=True
-    )
-    created_at = models.DateTimeField(auto_now_add=True,verbose_name = "Created At", help_text="Enter Date Time when this patient's record was created")
-    modified_at = models.DateTimeField(auto_now=True,verbose_name = "Modified At", help_text="Enter the Date Time when this patient's record was modified")
-
-    class Meta:
-        verbose_name = "Patient"
-        verbose_name_plural = "Patients"
-
-    def clean(self):
-        super().clean()
-        if self.date_of_birth and self.date_of_registration and self.date_of_registration < self.date_of_birth:
-            raise ValidationError({
-                "date_of_registration": "Date of Registration cannot be earlier than Date of Birth."
-            })
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        return super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.name} ({self.patient_uid})"
-
 
 class CancerSideChoices(models.TextChoices):
     '''
@@ -56,7 +20,6 @@ class CancerSideChoices(models.TextChoices):
     MIDLINE = 'ML', 'Midline'
     CENTRAL = 'C', 'Central'
     NOT_APPLICABLE = 'NA', 'Not Applicable'
-
 
 class AJCCStagePrefixChoices(models.TextChoices):
     '''
@@ -141,6 +104,68 @@ class AJCCSuffixChoices(models.TextChoices):
     '(m)' = 'm', 'multifocal'
     '(mi)' = 'mi', 'micrometastasis'
 
+class TreatmentIntentChoices(models.TextChoices):
+    '''
+    Enum to store choices related to the treatment intent.
+    '''
+    curative = 'curative', 'Curative'
+    palliative = 'palliative', 'Palliative'
+
+class TreatmentSequenceChoices(models.TextChoices):
+    '''
+    Enum to store choices related to Treatment Sequence.
+    '''
+    definitive = 'definitive', 'Definitive'
+    adjuvant = 'adjuvant', 'Adjuvant'
+    neoadjuvant = 'neoadjuvant', 'Neoadjuvant'
+    prophylactic = 'prophylactic', 'Prophylactic'
+    palliative = 'palliative', 'Palliative'
+    
+class RadiotherapyModalityChoices(models.TextChoices):
+    '''
+    Enum to store choices related to Radiotherapy Modality.
+    '''
+    EBRT = 'EBRT', 'External Beam Radiotherapy'
+    BRT = 'BRT', 'Brachytherapy'
+
+
+# Create your models here.
+
+class Patient(models.Model):
+    '''
+    Model to store information about Patient.
+    '''
+    patient_uid = models.CharField(unique=True,max_length=255,verbose_name = "Patient Hospital Unique ID", help_text="Enter the patient's Hospital Unique ID")
+    name = models.CharField(max_length=255,verbose_name = "Patient Name", help_text="Enter the patient's name")
+    date_of_birth = models.DateField(verbose_name = "Date of Birth", help_text="Enter the patient's date of birth")
+    gender = models.CharField(max_length=10,choices=GenderChoices.choices,verbose_name = "Gender", help_text="Enter the patient's gender")
+    date_of_registration = models.DateField(auto_now_add=True,verbose_name = "Date of Registration", help_text="Enter the patient's date of registration")
+    age_at_registration = models.GeneratedField(
+        expression = models.F('date_of_registration')-models.F('date_of_birth'),
+        output_field = models.DurationField(),
+        db_persist=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True,verbose_name = "Created At", help_text="Enter Date Time when this patient's record was created")
+    modified_at = models.DateTimeField(auto_now=True,verbose_name = "Modified At", help_text="Enter the Date Time when this patient's record was modified")
+
+    class Meta:
+        verbose_name = "Patient"
+        verbose_name_plural = "Patients"
+
+    def clean(self):
+        super().clean()
+        if self.date_of_birth and self.date_of_registration and self.date_of_registration < self.date_of_birth:
+            raise ValidationError({
+                "date_of_registration": "Date of Registration cannot be earlier than Date of Birth."
+            })
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} ({self.patient_uid})"
+
 class Diagnosis(models.Model):
     '''
     Model to store information about the diagnosis of the patient.
@@ -187,35 +212,6 @@ class Diagnosis(models.Model):
         self.full_clean()
         return super().save(*args, **kwargs)
 
-
-class TreatmentIntentChoices(models.TextChoices):
-    '''
-    Enum to store choices related to the treatment intent.
-    '''
-    curative = 'curative', 'Curative'
-    palliative = 'palliative', 'Palliative'
-
-class TreatmentSequenceChoices(models.TextChoices):
-    '''
-    Enum to store choices related to Treatment Sequence.
-    '''
-    definitive = 'definitive', 'Definitive'
-    adjuvant = 'adjuvant', 'Adjuvant'
-    neoadjuvant = 'neoadjuvant', 'Neoadjuvant'
-    prophylactic = 'prophylactic', 'Prophylactic'
-    palliative = 'palliative', 'Palliative'
-    
-
-
-class RadiotherapyModalityChoices(models.TextChoices):
-    '''
-    Enum to store choices related to Radiotherapy Modality.
-    '''
-    EBRT = 'EBRT', 'External Beam Radiotherapy'
-    BRT = 'BRT', 'Brachytherapy'
-    
-
-
 class RadiotherapyBooking(models.Model):
     '''
     Class to store information about the booking for the radiotherapy of the patient.
@@ -250,8 +246,8 @@ class RadiotherapyBooking(models.Model):
     modified_at = models.DateTimeField(auto_now=True,verbose_name = "Modified At", help_text="Enter the Date Time when this patient's record was modified")
 
     class Meta:
-        verbose_name = "Radiotherapy Treatment Plan"
-        verbose_name_plural = "Radiotherapy Treatment Plans"
+        verbose_name = "Radiotherapy Booking"
+        verbose_name_plural = "Radiotherapy Bookings"
 
     def __str__(self):
         return f"{self.diagnosis.patient.patient_uid} - {self.radiotherapy_modality}"
